@@ -1,15 +1,3 @@
 {
-  "models": [
-    {
-      "word": "Euro Vir Minutes Fran",
-      "business": "HELLO",
-      "category": "1-Ventes",
-      "team": "Administratif",
-      "transac_type": "Abonnement Outils",
-      "tva_rate": "10",
-      "ventilation": null,
-      "relatif_start": null,
-      "relatif_end": null
-    }
-  ]
+  "models": []
 }

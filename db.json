@@ -1,3 +1,15 @@
 {
-  "models": []
+  "models": [
+    {
+      "word": "Euro Vir Newsweb",
+      "business": "Newsweb",
+      "category": null,
+      "team": null,
+      "transac_type": null,
+      "tva_rate": null,
+      "ventilation": null,
+      "relatif_start": null,
+      "relatif_end": null
+    }
+  ]
 }

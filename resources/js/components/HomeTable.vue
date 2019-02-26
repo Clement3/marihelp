@@ -1,13 +1,15 @@
 <template>
-	<table class="table is-bordered is-fullwidth is-hoverable">
+	<table class="table is-bordered is-fullwidth">
   	<thead>
 			<tr>
+				<th>Date</th>
 				<th>Libellé</th>
-				<th>Société</th>
+				<th>Compte</th>
 				<th>Catégorie</th>
 				<th>Equipe</th>
 				<th>Type</th>
-				<th>Montant TTC / HT</th>
+				<th>Montant TTC</th>
+				<th>Montant HT</th>
 				<th>Taux TVA</th>
 				<th>Ventilation</th>
 				<th>Début relatif (mois)</th>
@@ -17,6 +19,7 @@
   	</thead>
   	<tbody>
 			<tr v-for="r in data" :key="r.id" :class="{ 'row-has-model' : r.hasModel }">
+				<td>{{ r.date }}</td>
 				<td>{{ r.word }}</td>
 				<td>
 					<div class="field">
@@ -50,26 +53,24 @@
 					</div>
 				</td>
 				<td>
-					<p>
-						<span
-							class="tag"
-							:class="{
-								'is-success' : isPositive(r.ttcAmount),
-								'is-danger' : !isPositive(r.ttcAmount )
-							}">
-							{{ r.ttcAmount }} € TTC
-						</span>
-					</p>
-					<p>
-						<span
-							class="tag"
-							:class="{
-								'is-success' : isPositive(htAmount(r.ttcAmount, r.tvaRate)),
-								'is-danger' : !isPositive(htAmount(r.ttcAmount, r.tvaRate))
-							}">
-							{{ htAmount(r.ttcAmount, r.tvaRate) }} € HT
-						</span>
-					</p>
+					<span
+						class="tag"
+						:class="{
+							'is-success' : isPositive(r.ttcAmount),
+							'is-danger' : !isPositive(r.ttcAmount )
+						}">
+						{{ r.ttcAmount }} € TTC
+					</span>
+				</td>
+				<td>
+					<span
+						class="tag"
+						:class="{
+							'is-success' : isPositive(htAmount(r.ttcAmount, r.tvaRate)),
+							'is-danger' : !isPositive(htAmount(r.ttcAmount, r.tvaRate))
+						}">
+						{{ htAmount(r.ttcAmount, r.tvaRate) }} € HT
+					</span>
 				</td>
 				<td>
 					<div class="field">

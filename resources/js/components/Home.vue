@@ -67,8 +67,9 @@ export default {
 			},
 			excelData: [],
 			labels: {
+				date: 'Date',
 				word: 'Libellé',
-				business: 'Entreprise',
+				business: 'Compte',
 				category: 'Catégorie',
 				team: 'Equipe',
 				transacType: 'Type',

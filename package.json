@@ -33,7 +33,8 @@
     "xlsx": "^0.14.1"
   },
   "devDependencies": {
+    "laravel-mix": "^4.0.14",
     "nodemon": "^1.18.10",
-    "laravel-mix": "^4.0.14"
+    "vue-template-compiler": "2.6.6"
   }
 }

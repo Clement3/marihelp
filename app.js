@@ -46,6 +46,7 @@ app.post('/upload', async function (req, res) {
 
 				const myObject = {
 					id: i,
+					date: jsonSheet[i].Date,
 					word: jsonSheet[i].Description,
 					business: model ? model.business : null,
 					category: model ? model.category : null,

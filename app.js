@@ -126,6 +126,8 @@ app.delete('/rows/:word', async function (req, res) {
 	return res.status(401).send();
 });
 
-app.listen(4000, () => {
+const port = process.env.PORT || 4000;
+
+app.listen(port, () => {
   console.log('Marieke Special App running on port 4000!')
 });

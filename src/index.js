@@ -3,37 +3,104 @@ const bodyParser = require('body-parser');
 const compression = require('compression');
 const fileUpload = require('express-fileupload');
 const XLSX = require('xlsx');
-const expressEdge = require('express-edge');
-const low = require('lowdb');
-const FileSync = require('lowdb/adapters/FileSync');
-const path = require('path');
+const Sequelize = require('sequelize');
+const basicAuth = require('express-basic-auth')
+const cors = require('cors');
 
 const app = express();
 
-// Load Packages
+// Instantiate Modules
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
 		extended: true,
 }));
 app.use(compression());
+app.use(cors());
 app.use(fileUpload());
-app.use(expressEdge);
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(basicAuth({
+	users: { 'admin': process.env.ADMIN_PASS || 'admin' }
+}))
 
-app.set('views', path.join(__dirname, 'views'));
+// File Config
+const availableExtension = [
+	'application/vnd.ms-excel',
+	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+];
+
+// Database config
+const database = {
+	host: process.env.DB_HOST || 'localhost',
+	name: process.env.DB_NAME || 'marieke',
+	user: process.env.DB_USER || 'clement',
+	password: process.env.DB_PASS || 'postgres',
+};
+
+const serverPort = process.env.PORT || 4000;
 
 // Database
-const adapter = new FileSync(path.join(__dirname, 'db.json'));
-const db = low(adapter);
+const sequelize = new Sequelize(database.name, database.user, database.password, {
+  host: database.host,
+  dialect: 'postgres',
+  operatorsAliases: false,
+
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+});
+
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log('Connection has been established successfully.');
+  })
+  .catch(err => {
+    console.error('Unable to connect to the database:', err);
+  });
+
+// Models
+const Row = sequelize.define('row', {
+  word: {
+    type: Sequelize.STRING
+  },
+  business: {
+    type: Sequelize.STRING
+	},
+  category: {
+    type: Sequelize.STRING
+	},
+  team: {
+    type: Sequelize.STRING
+	},
+	transac_type: {
+		type: Sequelize.STRING
+	},
+	tva_rate: {
+		type: Sequelize.INTEGER
+	},
+	ventilation: {
+		type: Sequelize.INTEGER
+	},
+	relatif_start: {
+		type: Sequelize.INTEGER
+	},
+	relatif_end: {
+		type: Sequelize.INTEGER
+	},
+});
+
+Row.sync({ force: false });
 
 // Route
 app.get('/', (req, res) => {
-	res.render('home', { message: 'Hello World' });
+	res.json({ message: 'Hello World!' });
 });
 
 app.post('/upload', async function (req, res) {
 	if (req.files.excel_file) {
-		if (req.files.excel_file.mimetype === 'application/vnd.ms-excel') {
+		if (availableExtension.includes(req.files.excel_file.mimetype)) {
 			const workbook = XLSX.read(req.files.excel_file.data, { type:'buffer' });
 			const getSheet = workbook.SheetNames[0];
 			const worksheet = workbook.Sheets[getSheet];
@@ -42,7 +109,7 @@ app.post('/upload', async function (req, res) {
 			let results = [];
 
 			for (let i = 0; i < jsonSheet.length; i++) {
-				const model = await db.get('models').find({ word: jsonSheet[i].Description }).value();
+				const model = await Row.findOne({ where: { word: jsonSheet[i].Description } });
 
 				const myObject = {
 					id: i,
@@ -67,7 +134,6 @@ app.post('/upload', async function (req, res) {
 			return res.status(200).send(results);
 		}
 
-
 		return res.status(400).send({ error : 'File type is not supported.' })
 	}
 
@@ -75,16 +141,16 @@ app.post('/upload', async function (req, res) {
 });
 
 app.get('/rows', async function (req, res) {
-	const models = await db.get('models').value()
+	const models = await Row.findAll({
+		order: [
+			['createdAt', 'DESC']
+		]
+	});
 
 	return res.status(200).send(models);
 });
 
-app.get('/models', function (req, res) {
-	res.render('models');
-});
-
-app.post('/rows', function (req, res) {
+app.post('/rows', async function (req, res) {
 	const object = {
 		word: req.body.word,
 		business: req.body.business,
@@ -97,29 +163,24 @@ app.post('/rows', function (req, res) {
 		relatif_end: req.body.relatifEnd
 	};
 
-	const model = db.get('models').find({ word: req.body.word }).value();
+	const model = await Row.findOne({ where: { word: req.body.word } });
 
 	if (model) {
-		db.get('models')
-			.find({ word: req.body.word })
-			.assign(object)
-			.write()
+		await Row.update(object);
 
 		return res.send(200).send();
 	} else {
-		db.get('models')
-			.push(object)
-			.write()
+		await Row.create(object);
 
 		return res.send(201).send();
 	}
 });
 
 app.delete('/rows/:word', async function (req, res) {
-	const model = await db.get('models').find({ word: req.params.word }).value();
+	const model = await Row.findOne({ where: { word: req.params.word } });
 
 	if (model) {
-		await db.get('models').remove({ word: req.params.word }).write();
+		await model.destroy();
 
 		return res.status(204).send();
 	}
@@ -127,8 +188,7 @@ app.delete('/rows/:word', async function (req, res) {
 	return res.status(401).send();
 });
 
-const port = process.env.PORT || 4000;
 
-app.listen(port, () => {
-  console.log('Marieke Special App running on port 4000!')
+app.listen(serverPort, () => {
+  console.log(`Application is running on port: ${serverPort}`);
 });
